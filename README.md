@@ -6,6 +6,8 @@ Face samples can be added to the model which can be used for recognition.
 
 The Music model is trained with 10 music genres.
 
+---
+
 ### Installation
 
 User can directly download the zip file of this repository and can extract it or they can run the following command in the terminal.
