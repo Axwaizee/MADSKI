@@ -56,8 +56,17 @@ export default function LoginPage() {
 
   const handleLogin = async (username) => {
     try {
-      await axios.post(`${import.meta.env.VITE_FACE_RECOGNITION}/login`, { username });
-      navigate('/');
+      await axios.post(`${import.meta.env.VITE_FACE_RECOGNITION}/login`, { username }).then((data)=>data.data).then((data) => {
+        if (data.status === 'success') {
+          localStorage.setItem('user_info', JSON.stringify(data.user_info));
+          localStorage.setItem('username', data.user);
+          localStorage.setItem('token', data.token);
+          navigate('/dashboard');
+        } else {
+          console.error('Login failed:', data.message);
+        }
+      })
+
     } catch (error) {
       console.error('Login failed:', error);
     }
