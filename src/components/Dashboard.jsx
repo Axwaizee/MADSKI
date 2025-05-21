@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   Box,
   Button,
   Container,
@@ -9,11 +9,11 @@ import {
   styled,
   useTheme
 } from '@mui/material';
-import { 
+import {
   FaceRetouchingNatural,
   Logout,
   MusicNote,
-  SmartToy 
+  SmartToy
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
@@ -56,7 +56,18 @@ const AnimatedBackgroundCircle = styled(motion.div)(({ theme }) => ({
 export default function Dashboard() {
   const theme = useTheme();
   const navigate = useNavigate();
+  const [login_user, setLogin_user] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
+
+  useEffect(() => {
+    
+    const username = localStorage.getItem('username');
+    if (!username) {
+      navigate('/'); // Redirect if username doesn't exist
+    } else {
+      setLogin_user(username); // Set user if exists
+    }
+  }, []);
 
   const options = [
     {
@@ -113,7 +124,7 @@ export default function Dashboard() {
             alignItems: 'center'
           }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <FaceRetouchingNatural sx={{ 
+              <FaceRetouchingNatural sx={{
                 fontSize: 40,
                 color: 'common.white'
               }} />
@@ -121,7 +132,7 @@ export default function Dashboard() {
                 MADSKI
               </GradientText>
             </Box>
-            
+
             <Button
               variant="outlined"
               color="inherit"
@@ -155,14 +166,14 @@ export default function Dashboard() {
           }}>
             MADSKI INFORMATIVE SYSTEM
           </Typography>
-          
+
           <Typography variant="h4" sx={{
             color: 'rgba(255, 255, 255, 0.9)',
             mb: 4
           }}>
-            Welcome MADSKI USERS !!
+            Welcome {login_user} !!
           </Typography>
-          
+
           <Typography variant="body1" sx={{
             color: 'rgba(255, 255, 255, 0.64)',
             maxWidth: 800,
@@ -186,23 +197,23 @@ export default function Dashboard() {
                 <Box sx={{ color: 'primary.main', mb: 3 }}>
                   {option.icon}
                 </Box>
-                
-                <Typography variant="h5" sx={{ 
+
+                <Typography variant="h5" sx={{
                   color: 'primary.main',
                   fontWeight: 'bold',
                   mb: 2
                 }}>
                   {option.title}
                 </Typography>
-                
-                <Typography variant="body1" sx={{ 
+
+                <Typography variant="body1" sx={{
                   color: 'text.secondary',
                   mb: 4,
                   fontSize: '1.1rem'
                 }}>
                   {option.description}
                 </Typography>
-                
+
                 <Button
                   variant="contained"
                   color="primary"
