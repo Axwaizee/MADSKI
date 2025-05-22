@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { io } from 'socket.io-client';
 import {
     styled,
     Typography,
     Button,
     Box,
     Grid,
-    IconButton
+    IconButton,
+    CircularProgress
 } from '@mui/material';
 import {
     MusicNote,
@@ -19,6 +21,9 @@ import {
     FaceRetouchingNatural,
     Album
 } from '@mui/icons-material';
+
+const API_URL = 'http://localhost:5000';
+const socket = io(API_URL);
 
 const ContainerBox = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -59,14 +64,78 @@ const ActionButton = styled(Button)(({ bgcolor }) => ({
 
 export default function MusicClassificationUI() {
     const [audioFile, setAudioFile] = useState(null);
+    const [predictions, setPredictions] = useState([]);
+    const [isRecording, setIsRecording] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState(null);
     const navigate = useNavigate();
 
-    const handleUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) setAudioFile(file);
+    useEffect(() => {
+        socket.on('prediction', handleSocketPrediction);
+        return () => {
+            socket.off('prediction');
+            if (mediaRecorder) mediaRecorder.stop();
+        };
+    }, []);
+
+    const handleSocketPrediction = (data) => {
+        setPredictions(data.predictions);
     };
 
-    const handleRecord = () => alert('Recording feature coming soon!');
+    const handleUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsProcessing(true);
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await fetch(`${API_URL}/predict`, {
+                method: 'POST',
+                body: formData,
+            });
+            const result = await response.json();
+            setPredictions(result.predictions);
+        } catch (error) {
+            console.error('Upload failed:', error);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    const startRecording = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const audioContext = new AudioContext();
+            const source = audioContext.createMediaStreamSource(stream);
+            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+            
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+
+            processor.onaudioprocess = (e) => {
+                const audioData = e.inputBuffer.getChannelData(0);
+                socket.emit('audio_chunk', {
+                    chunk: audioData.buffer,
+                    sample_rate: audioContext.sampleRate
+                });
+            };
+
+            setMediaRecorder(processor);
+            setIsRecording(true);
+        } catch (error) {
+            console.error('Recording failed:', error);
+        }
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorder) {
+            mediaRecorder.disconnect();
+            setMediaRecorder(null);
+        }
+        setIsRecording(false);
+    };
 
     return (
         <ContainerBox>
@@ -91,8 +160,19 @@ export default function MusicClassificationUI() {
                     <Typography variant="h5" color="white" gutterBottom>
                         Classification Result
                     </Typography>
-                    <Typography variant="h6" color="white">Genre: Pop Rock</Typography>
-                    <Typography color="white">Confidence: 92%</Typography>
+                    {isProcessing ? (
+                        <CircularProgress sx={{ color: 'white' }} />
+                    ) : predictions.length > 0 ? (
+                        predictions.map(([genre, confidence], index) => (
+                            <Box key={genre} width="100%" textAlign="center" my={1}>
+                                <Typography color="white">
+                                    {index + 1}. {genre} ({Math.round(confidence * 100)}%)
+                                </Typography>
+                            </Box>
+                        ))
+                    ) : (
+                        <Typography color="white">No results yet</Typography>
+                    )}
                 </BorderedBox>
 
                 <BorderedBox>
@@ -101,7 +181,7 @@ export default function MusicClassificationUI() {
                     </Typography>
                     <Box position="relative" display="flex" justifyContent="center" alignItems="center">
                         <motion.div
-                            animate={{ rotate: 360 }}
+                            animate={{ rotate: isRecording ? 360 : 0 }}
                             transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
                         >
                             <Album sx={{ fontSize: 160, color: 'rgba(255,255,255,0.2)' }} />
@@ -121,8 +201,9 @@ export default function MusicClassificationUI() {
                         component="label"
                         bgcolor="#7c4dff"
                         startIcon={<CloudUpload />}
+                        disabled={isProcessing}
                     >
-                        Upload Audio
+                        {isProcessing ? 'Processing...' : 'Upload Audio'}
                         <input type="file" hidden accept="audio/*" onChange={handleUpload} />
                     </ActionButton>
                     {audioFile && (
@@ -137,14 +218,14 @@ export default function MusicClassificationUI() {
                         Record Now
                     </Typography>
                     <ActionButton
-                        bgcolor="#ff4081"
+                        bgcolor={isRecording ? "#4caf50" : "#ff4081"}
                         startIcon={<Mic />}
-                        onClick={handleRecord}
+                        onClick={isRecording ? stopRecording : startRecording}
                     >
-                        Record
+                        {isRecording ? 'Stop Recording' : 'Start Recording'}
                     </ActionButton>
                 </BorderedBox>
             </SectionBox>
         </ContainerBox>
     );
-} 
+}

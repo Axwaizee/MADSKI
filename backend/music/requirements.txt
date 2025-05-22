@@ -1,0 +1,8 @@
+Flask
+Flask-Cors
+Flask-SocketIO
+librosa
+numpy
+tensorflow
+python-engineio
+python-socketio
