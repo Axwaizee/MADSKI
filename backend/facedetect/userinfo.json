@@ -1,0 +1,58 @@
+{
+  "Dipayan": {
+    "name": "Dipayan Banik",
+    "gender": "male",
+    "department": "Computer Science",
+    "program": "BCA",
+    "enrollment-no": "22STUCNND01022",
+    "date-of-birth": "19th February, 2004"
+  },
+  "Kele": {
+    "name": "Kelezenuo Kire",
+    "gender": "female",
+    "department": "Economics",
+    "program": "BA",
+    "enrollment-no": "22FHUCNND03052",
+    "date-of-birth": "3rd January, 2003"
+  },
+  "Kirang": {
+    "name": "Kirangstungba Longchar",
+    "gender": "male",
+    "department": "Computer Science",
+    "program": "BCA",
+    "enrollment-no": "22STUCNND01010",
+    "date-of-birth": "23rd October, 2003"
+  },
+  "Mani": {
+    "name": "Manichandra Kumar",
+    "gender": "male",
+    "department": "Computer Science",
+    "program": "BCA",
+    "enrollment-no": "22STUCNND01003",
+    "date-of-birth": "15th February, 2004"
+  },
+  "Pooja": {
+    "name": "Pooja Ghosh",
+    "gender": "female",
+    "department": "Economics",
+    "program": "BA",
+    "enrollment-no": "22FHUCNND03051",
+    "date-of-birth": "14th February, 2004"
+  },
+  "Subhayu": {
+    "name": "Subhayu Das",
+    "gender": "male",
+    "department": "Computer Science",
+    "program": "BCA",
+    "enrollment-no": "22STUCNND01016",
+    "date-of-birth": "11th January, 2004"
+  },
+  "Zierangyi": {
+    "name": "Zierangyi Hega",
+    "gender": "male",
+    "department": "Computer Science",
+    "program": "BCA",
+    "enrollment-no": "22STUCNND01004",
+    "date-of-birth": "15th January, 2004"
+  }
+}
