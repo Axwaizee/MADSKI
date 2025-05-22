@@ -5,50 +5,48 @@ import numpy as np
 from datetime import datetime
 import mediapipe as mp
 
-# ===== Configuration =====
-OUTPUT_FOLDER = "known_faces"
-CAPTURE_INTERVAL = 0.2  # seconds
+
+DATASET_FOLDER = "dataset"
+SHUTTER_DELAY = 0.2 
 RESOLUTION = (640, 480)
-MIN_MOTION_THRESHOLD = 10000
-MIN_IMAGES_PER_CLASS = 100
-WEBCAM_INDEX = 0  # Use 0 for laptop webcam
+MIN_MOVEMENT_THRES = 10000
+NO_OF_IMAGES_FOR_A_PERSON = 100
+WEBCAM_INDEX_NO = 0 
 START_KEY = 's'
 SHOW_LIVE_FEED = True
 
-# ===== Get User Label =====
-FACE_LABEL = input("Enter your name (label) to collect face data: ").strip()
-face_folder = os.path.join(OUTPUT_FOLDER, FACE_LABEL)
-os.makedirs(face_folder, exist_ok=True)
 
-# ===== Initialize Face Detection =====
+FACE_LABEL = input("Enter the name of the person: ").strip()
+person_dir = os.path.join(DATASET_FOLDER, FACE_LABEL)
+os.makedirs(person_dir, exist_ok=True)
+
+
 mp_face = mp.solutions.face_detection
 face_detection = mp_face.FaceDetection(model_selection=0, min_detection_confidence=0.6)
 
-# ===== Start Webcam =====
-print(f"🎥 Opening webcam (Index: {WEBCAM_INDEX}) — please wait...")
-start_time = time.time()
 
-cap = cv2.VideoCapture(WEBCAM_INDEX)
+print(f"Opening webcam...")
+
+cap = cv2.VideoCapture(WEBCAM_INDEX_NO)
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, RESOLUTION[0])
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, RESOLUTION[1])
 
 if not cap.isOpened():
-    raise IOError(f"❌ Failed to open webcam at index {WEBCAM_INDEX}")
-print(f"✅ Webcam opened in {time.time() - start_time:.2f} seconds")
+    raise IOError(f"❌ Failed to open webcam at index {WEBCAM_INDEX_NO}")
 
-# ===== Capture Logic =====
+
 background = None
 last_capture_time = time.time()
 started = False
 
 print(
-    f"\n▶️ Press '{START_KEY.upper()}' to start collecting {MIN_IMAGES_PER_CLASS} face images for '{FACE_LABEL}'...\n")
+    f"\nReady to capture {NO_OF_IMAGES_FOR_A_PERSON} face image(s) for '{FACE_LABEL}'. Press '{START_KEY.upper()}' to start.\n")
 
 try:
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("⚠️ Failed to read frame")
+            print("Failed to read frame")
             break
 
         # Motion detection
@@ -61,33 +59,33 @@ try:
         diff = cv2.absdiff(background, gray)
         thresh = cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1]
         thresh = cv2.dilate(thresh, None, iterations=2)
-        motion_detected = np.sum(thresh) > MIN_MOTION_THRESHOLD
+        motion_detected = np.sum(thresh) > MIN_MOVEMENT_THRES
 
         # Face detection
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = face_detection.process(rgb)
         face_detected = results.detections is not None
 
-        current_count = len(os.listdir(face_folder))
+        current_count = len(os.listdir(person_dir))
         current_time = time.time()
         time_since_last_capture = current_time - last_capture_time
 
         if started:
-            if (time_since_last_capture >= CAPTURE_INTERVAL and
+            if (time_since_last_capture >= SHUTTER_DELAY and
                     motion_detected and face_detected and
-                    current_count < MIN_IMAGES_PER_CLASS):
+                    current_count < NO_OF_IMAGES_FOR_A_PERSON):
 
                 filename = os.path.join(
-                    face_folder,
+                    person_dir,
                     f"{FACE_LABEL}_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}.jpg"
                 )
                 cv2.imwrite(filename, frame)
-                print(f"📸 Saved: {filename} ({current_count + 1}/{MIN_IMAGES_PER_CLASS})")
+                print(f"Saved: {filename} ({current_count + 1}/{NO_OF_IMAGES_FOR_A_PERSON})")
                 last_capture_time = current_time
                 background = gray.copy()
 
-                if current_count + 1 >= MIN_IMAGES_PER_CLASS:
-                    print(f"\n✅ Collection complete for '{FACE_LABEL}'!")
+                if current_count + 1 >= NO_OF_IMAGES_FOR_A_PERSON:
+                    print(f"\nCollection complete for '{FACE_LABEL}'!")
                     break
 
         # UI Display
@@ -98,8 +96,8 @@ try:
             else:
                 status = [
                     f"Label: {FACE_LABEL}",
-                    f"Images: {current_count}/{MIN_IMAGES_PER_CLASS}",
-                    f"Next: {max(0, round(CAPTURE_INTERVAL - time_since_last_capture, 1))}s",
+                    f"Images: {current_count}/{NO_OF_IMAGES_FOR_A_PERSON}",
+                    f"Next: {max(0, round(SHUTTER_DELAY - time_since_last_capture, 1))}s",
                     f"Motion: {'YES' if motion_detected else 'NO'}",
                     f"Face: {'YES' if face_detected else 'NO'}"
                 ]
@@ -111,18 +109,18 @@ try:
 
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
-            print("\n⛔ Quit by user.")
+            print("\nQuit by user.")
             break
         elif key == ord(START_KEY) and not started:
-            print("✅ Starting face capture...")
+            print("Starting face capture...")
             started = True
             last_capture_time = time.time()
 
 except KeyboardInterrupt:
-    print("\n⛔ Interrupted by keyboard.")
+    print("\nInterrupted by keyboard.")
 
 finally:
     cap.release()
     cv2.destroyAllWindows()
     face_detection.close()
-    print("📦 Done collecting face dataset.")
+    print("Done collecting face dataset.")
