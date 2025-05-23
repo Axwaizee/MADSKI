@@ -51,8 +51,58 @@ Or can run the build version by first making a build of the project.
 npm build
 ```
 
+### For Deployment Mode
+
 and can serve the build:
 
 ```bash
 npx serve -s dist
+```
+
+
+
+##  Face Recognition
+
+Move to the `/facedetect/` directory:
+
+```bash
+cd backend/facedetect
+```
+
+You can run in the python virtual environment (recommended):
+
+```bash
+python -m venv .venv
+```
+
+Next you can activate the virtual environment as per your terminal, an example of powershell is provided below:
+
+```ps
+.\.venv\Scripts\activate
+```
+
+Then you can install the required dependences.
+
+```bash
+pip install -r requirements.txt
+```
+
+----
+
+Now you can run `face_collector.py` -> `GenerateFaceEmbeddings.py` -> `TrainFaceClassifier.py` -> `server.py`
+
+The face recognition will be running on host `0.0.0.0` and port `5000`
+
+---
+
+## Music Classification
+
+You can train the model with your music dataset. We have already trained a best model which can be downloaded and saved in the `backend/music/models/` folder.
+
+Create a virtual environment as we did in Face recognition
+
+Then you can run this command to in the `/music/` directory:
+
+```bash
+python server.py
 ```
