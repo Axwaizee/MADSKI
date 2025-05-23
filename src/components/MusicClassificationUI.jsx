@@ -142,8 +142,8 @@ export default function MusicClassificationUI() {
                     <IconButton onClick={() => navigate(-1)} sx={{ color: 'white' }}>
                         <ArrowBack />
                     </IconButton>
-                    <FaceRetouchingNatural sx={{ fontSize: 40, color: 'white' }} />
-                    <Typography variant="h5" color="white" fontWeight="bold">
+                    <FaceRetouchingNatural sx={{ fontSize: 40, color: 'white', cursor: 'pointer' }} onClick={()=>{navigate("/")}} />
+                    <Typography variant="h5" color="white" fontWeight="bold" sx={{ cursor: 'pointer' }} onClick={()=>{navigate("/")}}>
                         MADSKI
                     </Typography>
                 </Box>
