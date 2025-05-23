@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { io } from 'socket.io-client';
 import {
     styled,
@@ -11,7 +11,6 @@ import {
     CircularProgress
 } from '@mui/material';
 import {
-    Mic,
     CloudUpload,
     Audiotrack,
     ArrowBack,
@@ -47,7 +46,6 @@ const SectionBox = styled(Box)(({ theme }) => ({
 }));
 
 const BorderedBox = styled(Box)(({ theme }) => ({
-    flex: 1,
     border: '2px solid white',
     borderRadius: theme.spacing(2),
     padding: theme.spacing(3),
@@ -59,11 +57,26 @@ const BorderedBox = styled(Box)(({ theme }) => ({
     minHeight: 200,
 }));
 
+const UploadBox = styled(BorderedBox)(({ theme }) => ({
+    flex: 1,
+    transition: 'all 0.3s ease',
+}));
+
+const PreviewBox = styled(BorderedBox)(({ theme }) => ({
+    flex: 1,
+    transition: 'all 0.3s ease',
+}));
+
+const ResultsBox = styled(BorderedBox)(({ theme }) => ({
+    flex: 1,
+    transition: 'all 0.3s ease',
+}));
+
 const ActionButton = styled(Button)(({ bgcolor }) => ({
-    backgroundColor: bgcolor,
+    backgroundColor: bgcolor || '#7c4dff',
     color: '#fff',
     '&:hover': {
-        backgroundColor: bgcolor,
+        backgroundColor: bgcolor || '#7c4dff',
         opacity: 0.85,
     },
 }));
@@ -72,10 +85,9 @@ export default function MusicClassificationUI() {
     const [audioFile, setAudioFile] = useState(null);
     const [audioPreview, setAudioPreview] = useState(null);
     const [predictions, setPredictions] = useState([]);
-    const [isRecording, setIsRecording] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const mediaRecorder = useRef(null);
-    const audioChunks = useRef([]);
+    const [showPreview, setShowPreview] = useState(false);
+    const [showResults, setShowResults] = useState(false);
     const audioElement = useRef(null);
     const navigate = useNavigate();
 
@@ -87,12 +99,12 @@ export default function MusicClassificationUI() {
         return () => {
             socket.off('prediction');
             socket.disconnect();
-            stopRecording();
         };
     }, []);
 
     const handleSocketPrediction = (data) => {
-        setPredictions(prev => [...data.predictions]);
+        setPredictions([...data.predictions]);
+        setShowResults(true);
     };
 
     const handleUpload = async (e) => {
@@ -102,6 +114,8 @@ export default function MusicClassificationUI() {
         setAudioFile(file);
         setAudioPreview(URL.createObjectURL(file));
         setIsProcessing(true);
+        setShowPreview(true);
+        setShowResults(false);
 
         const formData = new FormData();
         formData.append('file', file);
@@ -113,46 +127,12 @@ export default function MusicClassificationUI() {
             });
             const result = await response.json();
             setPredictions(result.predictions);
+            setShowResults(true);
         } catch (error) {
             console.error('Upload failed:', error);
         } finally {
             setIsProcessing(false);
         }
-    };
-
-    const startRecording = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const audioContext = new AudioContext();
-            const source = audioContext.createMediaStreamSource(stream);
-            const processor = audioContext.createScriptProcessor(4096, 1, 1);
-            
-            source.connect(processor);
-            processor.connect(audioContext.destination);
-
-            processor.onaudioprocess = (e) => {
-                if (!isRecording) return;
-                const audioData = e.inputBuffer.getChannelData(0);
-                socket.emit('audio_chunk', {
-                    chunk: Array.from(audioData),
-                    sample_rate: audioContext.sampleRate
-                });
-            };
-
-            mediaRecorder.current = { processor, stream };
-            setIsRecording(true);
-        } catch (error) {
-            console.error('Recording failed:', error);
-        }
-    };
-
-    const stopRecording = () => {
-        if (mediaRecorder.current) {
-            mediaRecorder.current.processor.disconnect();
-            mediaRecorder.current.stream.getTracks().forEach(track => track.stop());
-            mediaRecorder.current = null;
-        }
-        setIsRecording(false);
     };
 
     return (
@@ -172,83 +152,99 @@ export default function MusicClassificationUI() {
                 </IconButton>
             </Box>
 
-            <SectionBox>
-                <BorderedBox>
-                    <Typography variant="h5" color="white" gutterBottom>
-                        Classification Result
-                    </Typography>
-                    {isProcessing ? (
-                        <CircularProgress sx={{ color: 'white' }} />
-                    ) : predictions.length > 0 ? (
-                        predictions.map(([genre, confidence], index) => (
-                            <Box key={genre} width="100%" textAlign="center" my={1}>
-                                <Typography color="white">
-                                    {index + 1}. {genre} ({Math.round(confidence * 100)}%)
+            <AnimatePresence>
+                {showResults && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        <SectionBox>
+                            <ResultsBox>
+                                <Typography variant="h5" color="white" gutterBottom>
+                                    Classification Result
                                 </Typography>
-                            </Box>
-                        ))
-                    ) : (
-                        <Typography color="white">No results yet</Typography>
-                    )}
-                </BorderedBox>
-
-                <BorderedBox>
-                    <Typography variant="h5" color="white" gutterBottom>
-                        Preview
-                    </Typography>
-                    <Box position="relative" display="flex" justifyContent="center" alignItems="center">
-                        <motion.div
-                            animate={{ rotate: isRecording ? 360 : 0 }}
-                            transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
-                        >
-                            <Album sx={{ fontSize: 160, color: 'rgba(255,255,255,0.2)' }} />
-                        </motion.div>
-                        <Audiotrack sx={{ position: 'absolute', fontSize: 60, color: '#ff4081' }} />
-                    </Box>
-                    {audioPreview && (
-                        <audio 
-                            ref={audioElement}
-                            controls 
-                            src={audioPreview} 
-                            style={{ width: '100%', marginBottom: 16 }}
-                        />
-                    )}
-                </BorderedBox>
-            </SectionBox>
+                                {predictions.length > 0 ? (
+                                    predictions.map(([genre, confidence], index) => (
+                                        <Box key={genre} width="100%" textAlign="center" my={1}>
+                                            <Typography color="white">
+                                                {index + 1}. {genre} ({Math.round(confidence * 100)}%)
+                                            </Typography>
+                                        </Box>
+                                    ))
+                                ) : (
+                                    <Typography color="white">No results yet</Typography>
+                                )}
+                            </ResultsBox>
+                        </SectionBox>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <SectionBox>
-                <BorderedBox>
-                    <Typography variant="h6" color="white" gutterBottom>
-                        Upload Audio File
-                    </Typography>
-                    <ActionButton
-                        component="label"
-                        bgcolor="#7c4dff"
-                        startIcon={<CloudUpload />}
-                        disabled={isProcessing}
-                    >
-                        {isProcessing ? 'Processing...' : 'Upload Audio'}
-                        <input type="file" hidden accept="audio/*" onChange={handleUpload} />
-                    </ActionButton>
-                    {audioFile && (
-                        <Typography mt={2} color="white">
-                            {audioFile.name}
-                        </Typography>
-                    )}
-                </BorderedBox>
+                {showPreview ? (
+                    <>
+                        <PreviewBox>
+                            <Typography variant="h5" color="white" gutterBottom>
+                                Preview
+                            </Typography>
+                            <Box position="relative" display="flex" justifyContent="center" alignItems="center">
+                                <motion.div
+                                    animate={{ rotate: isProcessing ? 360 : 0 }}
+                                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                                >
+                                    <Album sx={{ fontSize: 160, color: 'rgba(255,255,255,0.2)' }} />
+                                </motion.div>
+                                <Audiotrack sx={{ position: 'absolute', fontSize: 60, color: '#ff4081' }} />
+                            </Box>
+                            {audioPreview && (
+                                <audio 
+                                    ref={audioElement}
+                                    controls 
+                                    src={audioPreview} 
+                                    style={{ width: '100%', marginTop: 16 }}
+                                />
+                            )}
+                        </PreviewBox>
 
-                <BorderedBox>
-                    <Typography variant="h6" color="white" gutterBottom>
-                        Record Now
-                    </Typography>
-                    <ActionButton
-                        bgcolor={isRecording ? "#4caf50" : "#ff4081"}
-                        startIcon={<Mic />}
-                        onClick={isRecording ? stopRecording : startRecording}
-                    >
-                        {isRecording ? 'Stop Recording' : 'Start Recording'}
-                    </ActionButton>
-                </BorderedBox>
+                        <UploadBox>
+                            <Typography variant="h6" color="white" gutterBottom>
+                                Upload New Audio
+                            </Typography>
+                            <ActionButton
+                                component="label"
+                                startIcon={<CloudUpload />}
+                                disabled={isProcessing}
+                            >
+                                {isProcessing ? 'Processing...' : 'Upload Audio'}
+                                <input type="file" hidden accept="audio/*" onChange={handleUpload} />
+                            </ActionButton>
+                            {audioFile && (
+                                <Typography mt={2} color="white">
+                                    {audioFile.name}
+                                </Typography>
+                            )}
+                        </UploadBox>
+                    </>
+                ) : (
+                    <UploadBox sx={{ flex: 1 }}>
+                        <Typography variant="h4" color="white" gutterBottom textAlign="center">
+                            Music Genre Classifier
+                        </Typography>
+                        <Typography variant="body1" color="white" gutterBottom textAlign="center" mb={4}>
+                            Upload an audio file to analyze its music genre
+                        </Typography>
+                        <ActionButton
+                            component="label"
+                            startIcon={<CloudUpload />}
+                            size="large"
+                        >
+                            Upload Audio File
+                            <input type="file" hidden accept="audio/*" onChange={handleUpload} />
+                        </ActionButton>
+                    </UploadBox>
+                )}
             </SectionBox>
         </ContainerBox>
     );
