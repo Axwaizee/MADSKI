@@ -23,7 +23,10 @@ import {
 } from '@mui/icons-material';
 
 const API_URL = import.meta.env.VITE_MUSIC_CLASSIFICATION;
-const socket = io(API_URL);
+const socket = io(API_URL, {
+  transports: ['websocket'],
+  withCredentials: true
+});
 
 const ContainerBox = styled(Box)(({ theme }) => ({
     display: 'flex',
@@ -75,8 +78,9 @@ export default function MusicClassificationUI() {
         return () => {
             socket.off('prediction');
             if (mediaRecorder) mediaRecorder.stop();
+            socket.disconnect();
         };
-    }, []);
+    }, [])
 
     const handleSocketPrediction = (data) => {
         setPredictions(data.predictions);
@@ -116,8 +120,9 @@ export default function MusicClassificationUI() {
 
             processor.onaudioprocess = (e) => {
                 const audioData = e.inputBuffer.getChannelData(0);
+                const buffer = new Float32Array(audioData).buffer;
                 socket.emit('audio_chunk', {
-                    chunk: audioData.buffer,
+                    chunk: Array.from(audioData),
                     sample_rate: audioContext.sampleRate
                 });
             };
