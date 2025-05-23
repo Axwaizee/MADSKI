@@ -24,7 +24,7 @@ app.prepare(ctx_id=0, det_size=(640, 640))  # Prepare model with 640x640 resolut
 
 # Load trained classifier and label encoder
 classifier = joblib.load("face_classifier.pkl")
-label_encoder = joblib.load("label_encoder.pkl")
+lb_enc = joblib.load("lb_enc.pkl")
 THRESHOLD = 0.7  # Minimum confidence threshold for recognition
 
 # Initialize Flask app with CORS
@@ -55,7 +55,7 @@ def recognize():
 
             if max_prob >= THRESHOLD:
                 # Decode label and add to matches
-                name = label_encoder.inverse_transform([pred_label])[0]
+                name = lb_enc.inverse_transform([pred_label])[0]
                 matches.append({
                     'name': name,
                     'confidence': round(max_prob * 100, 1)
