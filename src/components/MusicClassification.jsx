@@ -97,14 +97,13 @@ export default function MusicClassification() {
     <>
       <AppBar
         position="fixed"
-        color="transparent"
         elevation={0}
         sx={{ backdropFilter: 'blur(10px)' }}
       >
         <Toolbar>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() =>navigate(-1)}
+            onClick={() => navigate('/')}
             sx={{ color: 'white' }}
           >
             Back
