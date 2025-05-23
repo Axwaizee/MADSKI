@@ -59,7 +59,6 @@ const Logo = styled(motion.div)(({ theme }) => ({
   '& .logo-text': {
     background: `linear-gradient(45deg, ${theme.palette.secondary.main} 0%,rgb(13, 27, 177) 100%)`,
     WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
     fontWeight: 'bold',
     fontSize: '1.8rem'
   }
@@ -75,7 +74,7 @@ export default function AIChatbot() {
         <Toolbar>
           <Button 
             startIcon={<ArrowBack />} 
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             sx={{ color: 'white' }}
           >
             Back

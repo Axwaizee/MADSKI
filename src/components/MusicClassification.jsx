@@ -97,7 +97,6 @@ export default function MusicClassification() {
     <>
       <AppBar
         position="fixed"
-        color="transparent"
         elevation={0}
         sx={{ backdropFilter: 'blur(10px)' }}
       >
