@@ -154,7 +154,7 @@ export default function HomePage() {
                 fontSize: '1.3rem',
                 color: 'rgba(255,255,255,0.9)',
                 mb: 4,
-                maxWidth: 500
+                maxWidth: "35vw"
               }}>
                 MADSKI Informative System offers secure AI-powered facial recognition authentication, featuring military-grade security, instant identity verification, and cross-platform compatibility for seamless, protected access
               </Typography>
