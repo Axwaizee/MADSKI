@@ -85,7 +85,7 @@ export default function FaceAuthenticationPage() {
         <Toolbar>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             sx={{ color: 'white' }}
           >
             Back

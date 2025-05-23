@@ -109,7 +109,7 @@ export default function LoginPage() {
 
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/')}
+            onClick={() => navigate(-1)}
             sx={{ color: 'black' , fontWeight:"bold", fontSize: "1.2rem"}}
           >
             Back to Home

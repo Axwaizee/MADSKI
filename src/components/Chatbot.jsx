@@ -17,7 +17,8 @@ import {
 import {
   FaceRetouchingNatural,
   Send,
-  Logout
+  Logout,
+  ArrowBack
 } from '@mui/icons-material';
 
 // Styled components
@@ -28,8 +29,6 @@ const AnimatedContainer = styled(motion.div)(({ theme }) => ({
   flexDirection: 'column',
   position: 'relative',
   overflow: 'hidden',
-  // paddingRight: theme.spacing(2),
-  // paddingLeft: theme.spacing(2),
 }));
 
 const FeatureCircle = styled(motion.div)(({ theme }) => ({
@@ -122,7 +121,6 @@ export default function ChatbotUI() {
     { id: 1, text: "Hello! I'm MADSKI's AI assistant. How can I help you today?", isUser: false },
   ]);
 
-  // Scroll to bottom when new messages are added
   useEffect(() => {
     if (messageAreaRef.current) {
       messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
@@ -132,12 +130,10 @@ export default function ChatbotUI() {
   const handleSendMessage = () => {
     if (message.trim() === '') return;
     
-    // Add user message
     const newUserMessage = { id: chatHistory.length + 1, text: message, isUser: true };
     setChatHistory(prev => [...prev, newUserMessage]);
     setMessage('');
     
-    // Simulate bot response after a short delay
     setTimeout(() => {
       const botResponses = [
         "I understand. Can you tell me more about that?",
@@ -159,7 +155,6 @@ export default function ChatbotUI() {
   };
 
   const handleLogout = () => {
-    // Handle logout logic here
     navigate('/login');
   };
 
@@ -169,7 +164,6 @@ export default function ChatbotUI() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
     >
-      {/* Animated background circles */}
       <FeatureCircle
         animate={{ scale: [1, 1.2, 1], rotate: 360 }}
         transition={{ duration: 20, repeat: Infinity }}
@@ -183,16 +177,25 @@ export default function ChatbotUI() {
 
       <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
         <HeaderContainer>
-          <Logo
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <FaceRetouchingNatural sx={{ fontSize: isMobile ? 40 : 60 }} />
-            <Typography variant="body1" className="logo-text">
-              MADSKI
-            </Typography>
-          </Logo>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <IconButton 
+              onClick={() => navigate(-1)}
+              sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}
+            >
+              <ArrowBack />
+            </IconButton>
+
+            <Logo
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <FaceRetouchingNatural sx={{ fontSize: isMobile ? 40 : 60 }} />
+              <Typography variant="body1" className="logo-text">
+                MADSKI
+              </Typography>
+            </Logo>
+          </Box>
 
           <Button
             variant="contained"
@@ -224,7 +227,6 @@ export default function ChatbotUI() {
                 </MessageContent>
                 {msg.isUser && (
                   <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                    {/* User's initial or icon here */}
                     U
                   </Avatar>
                 )}

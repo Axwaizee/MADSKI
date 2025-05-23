@@ -104,7 +104,7 @@ export default function MusicClassification() {
         <Toolbar>
           <Button
             startIcon={<ArrowBack />}
-            onClick={() => navigate('/')}
+            onClick={() =>navigate(-1)}
             sx={{ color: 'white' }}
           >
             Back
