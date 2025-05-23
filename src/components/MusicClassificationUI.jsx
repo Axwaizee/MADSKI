@@ -22,7 +22,7 @@ import {
     Album
 } from '@mui/icons-material';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_MUSIC_CLASSIFICATION;
 const socket = io(API_URL);
 
 const ContainerBox = styled(Box)(({ theme }) => ({
