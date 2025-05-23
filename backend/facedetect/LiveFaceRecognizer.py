@@ -12,7 +12,7 @@ THRESHOLD = 0.7   # Confidence threshold for predictions
 print("📦 Loading classifier and label encoder...")
 classifier = joblib.load("face_classifier.pkl")
 # a pretrained SVM model
-label_encoder = joblib.load("label_encoder.pkl")
+lb_enc = joblib.load("lb_enc.pkl")
 
 # ===== Initialize InsightFace =====
 print("🚀 Initializing InsightFace...")
@@ -52,7 +52,7 @@ try:
             probs = classifier.predict_proba(emb)[0]
             max_prob = np.max(probs)
             pred_label = classifier.predict(emb)[0]
-            name = label_encoder.inverse_transform([pred_label])[0] if max_prob >= THRESHOLD else "Unknown"
+            name = lb_enc.inverse_transform([pred_label])[0] if max_prob >= THRESHOLD else "Unknown"
             # predict_proba: Gets probabilities for all possible labels.
             #
             # max_prob: Highest confidence score among predictions.

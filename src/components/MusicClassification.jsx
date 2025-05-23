@@ -110,8 +110,8 @@ export default function MusicClassification() {
             Back
           </Button>
           <Box sx={{ flexGrow: 1 }} />
-          <Logo>
-            <FaceRetouchingNatural sx={{ fontSize: 40 }} />
+          <Logo sx={{ cursor: 'pointer' }} onClick={()=>{navigate("/")}}>
+            <FaceRetouchingNatural sx={{ fontSize: 45 }} />
             <Typography variant="h6" className="logo-text">
               MADSKI
             </Typography>

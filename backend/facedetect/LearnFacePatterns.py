@@ -9,9 +9,9 @@ import seaborn as sns
 
 # ===== Load Embeddings =====
 print("📦 Loading face embeddings...")
-data = np.load("face_embeddings.npz")
+data = np.load("face_embdgs.npz")
 embeddings, labels = data["embeddings"], data["labels"]
-print(f"✅ Loaded {len(embeddings)} embeddings from face_embeddings.npz")
+print(f"✅ Loaded {len(embeddings)} embeddings from face_embdgs.npz")
 
 # ===== Encode Labels =====
 print("🔤 Encoding labels...")
@@ -65,9 +65,9 @@ plt.show()
 
 # ===== Save Classifier & Label Encoder =====
 joblib.dump(clf, "face_classifier.pkl")
-joblib.dump(le, "label_encoder.pkl")
-joblib.dump(scaler, "embedding_scaler.pkl")
+joblib.dump(le, "lb_enc.pkl")
+joblib.dump(scaler, "emb_sclr.pkl")
 
 print("\n💾 Classifier saved to: face_classifier.pkl")
-print("💾 Label encoder saved to: label_encoder.pkl")
-print("💾 Scaler saved to: embedding_scaler.pkl")
+print("💾 Label encoder saved to: lb_enc.pkl")
+print("💾 Scaler saved to: emb_sclr.pkl")

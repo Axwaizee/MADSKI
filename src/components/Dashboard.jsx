@@ -123,7 +123,7 @@ export default function Dashboard() {
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box sx={{ cursor: 'pointer' , display: 'flex', alignItems: 'center', gap: 2 }} onClick={()=>{navigate("/")}}>
               <FaceRetouchingNatural sx={{
                 fontSize: 40,
                 color: 'common.white'

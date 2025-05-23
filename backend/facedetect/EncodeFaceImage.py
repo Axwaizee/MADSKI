@@ -5,8 +5,8 @@ from tqdm import tqdm
 from insightface.app import FaceAnalysis
 
 # ====== Config ======
-DATASET_DIR = "known_faces"
-OUTPUT_FILE = "face_embeddings.npz"
+DATASET_DIR = "dataset"
+OUTPUT_FILE = "face_embdgs.npz"
 
 # ====== Initialize FaceAnalysis ======
 print("🚀 Initializing InsightFace...")
