@@ -196,14 +196,6 @@ export default function MusicClassificationUI() {
                     <Typography variant="h5" color="white" gutterBottom>
                         Preview
                     </Typography>
-                    {audioPreview && (
-                        <audio 
-                            ref={audioElement}
-                            controls 
-                            src={audioPreview} 
-                            style={{ width: '100%', marginBottom: 16 }}
-                        />
-                    )}
                     <Box position="relative" display="flex" justifyContent="center" alignItems="center">
                         <motion.div
                             animate={{ rotate: isRecording ? 360 : 0 }}
@@ -213,6 +205,14 @@ export default function MusicClassificationUI() {
                         </motion.div>
                         <Audiotrack sx={{ position: 'absolute', fontSize: 60, color: '#ff4081' }} />
                     </Box>
+                    {audioPreview && (
+                        <audio 
+                            ref={audioElement}
+                            controls 
+                            src={audioPreview} 
+                            style={{ width: '100%', marginBottom: 16 }}
+                        />
+                    )}
                 </BorderedBox>
             </SectionBox>
 
