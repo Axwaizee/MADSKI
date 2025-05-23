@@ -119,6 +119,7 @@ export default function LoginPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
+            sx={{ cursor: 'pointer' }} onClick={()=>{navigate("/")}}
 
           >
             <FaceRetouchingNatural sx={{
