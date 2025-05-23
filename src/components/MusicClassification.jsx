@@ -77,6 +77,7 @@ const WaveAnimation = styled(motion.div)(({ theme }) => ({
 const Logo = styled(motion.div)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
+  colors: 'black',
   gap: theme.spacing(2),
   '& .logo-text': {
     background: `linear-gradient(45deg, ${theme.palette.secondary.main} 0%, rgb(35, 48, 197) 100%)`,
@@ -110,7 +111,7 @@ export default function MusicClassification() {
           </Button>
           <Box sx={{ flexGrow: 1 }} />
           <Logo>
-            <FaceRetouchingNatural sx={{ fontSize: 45 }} />
+            <FaceRetouchingNatural sx={{ fontSize: 40 }} />
             <Typography variant="h6" className="logo-text">
               MADSKI
             </Typography>
