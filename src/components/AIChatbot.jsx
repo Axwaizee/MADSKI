@@ -55,10 +55,12 @@ const ContentContainer = styled(Box)(({ theme }) => ({
 const Logo = styled(motion.div)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
+  colors: 'black',
   gap: theme.spacing(2),
   '& .logo-text': {
     background: `linear-gradient(45deg, ${theme.palette.secondary.main} 0%,rgb(13, 27, 177) 100%)`,
     WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
     fontWeight: 'bold',
     fontSize: '1.8rem'
   }

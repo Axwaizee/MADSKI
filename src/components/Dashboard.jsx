@@ -187,7 +187,7 @@ export default function Dashboard() {
         {/* Feature Cards */}
         <Grid container spacing={4} justifyContent="center" sx={{ mt: 4 }}>
           {options.map((option, index) => (
-            <Grid item xs={12} md={6} lg={5} key={index}>
+            <Grid item xs={12} md={6} lg={5} key={index} sx={{maxWidth: "45vw"}}>
               <FeatureCard
                 onMouseEnter={() => setHoveredCard(index)}
                 onMouseLeave={() => setHoveredCard(null)}
