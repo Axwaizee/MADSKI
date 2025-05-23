@@ -89,7 +89,7 @@ pip install -r requirements.txt
 
 ----
 
-Now you can run `face_collector.py` -> `GenerateFaceEmbeddings.py` -> `TrainFaceClassifier.py` -> `server.py`
+Now you can run `face_data_capture.py` -> `EncodeFaceImage.py` -> `LearnFacePatterns.py` -> `server.py`
 
 The face recognition will be running on host `0.0.0.0` and port `5000`
 
