@@ -106,3 +106,5 @@ Then you can run this command to in the `/music/` directory:
 ```bash
 python server.py
 ```
+
+The music classification will be running on host `0.0.0.0` and port `5000`
