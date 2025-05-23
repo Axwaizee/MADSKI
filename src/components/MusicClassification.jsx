@@ -87,15 +87,7 @@ const Logo = styled(motion.div)(({ theme }) => ({
   },
 }));
 
-const musicGenres = [
-  'Pop & Contemporary',
-  'Rock & Alternative',
-  'Hip-Hop & Rap',
-  'Electronic & Dance',
-  'Classical & Instrumental',
-  'Jazz & Blues',
-  'World Music',
-];
+const musicGenres = ['disco','pop', 'hiphop', 'jazz', 'classical', 'metal', 'blues', 'reggae', 'rock', 'country'];
 
 export default function MusicClassification() {
   const navigate = useNavigate();
