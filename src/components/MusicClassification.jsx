@@ -207,10 +207,7 @@ function MusicInfoContent() {
         variant="body1"
         sx={{ color: 'rgba(255, 255, 255, 0.9)', mb: 4, fontSize: '1.1rem' }}
       >
-        Our sophisticated music classification system uses deep neural networks
-        to analyze audio patterns and accurately categorize music across dozens
-        of genres and subgenres. Upload any audio file and receive instant
-        classification with detailed musical attribute analysis.
+        This project explores the use of computational methods to classify music tracks into genres by converting audio signals into mel spectrograms—a visual representation of sound frequencies over time. These spectrograms capture important characteristics of the music, such as pitch, rhythm, and texture. Deep learning models, especially convolutional neural networks (CNNs), are then trained on these spectrograms to recognize patterns and accurately predict the genre of each track.
       </Typography>
 
       <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
