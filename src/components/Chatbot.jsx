@@ -127,26 +127,29 @@ export default function ChatbotUI() {
     }
   }, [chatHistory]);
 
-  const handleSendMessage = () => {
-    if (message.trim() === '') return;
-    
-    const newUserMessage = { id: chatHistory.length + 1, text: message, isUser: true };
-    setChatHistory(prev => [...prev, newUserMessage]);
-    setMessage('');
-    
-    setTimeout(() => {
-      const botResponses = [
-        "I understand. Can you tell me more about that?",
-        "That's interesting! How can I assist you with this?",
-        "Thanks for sharing. Let me help you with that.",
-        "I'm processing your request. Is there anything else you'd like to add?",
-        "I appreciate your input. Let me think about the best way to help you."
-      ];
-      const randomResponse = botResponses[Math.floor(Math.random() * botResponses.length)];
-      const newBotMessage = { id: chatHistory.length + 2, text: randomResponse, isUser: false };
-      setChatHistory(prev => [...prev, newBotMessage]);
-    }, 1000);
-  };
+  const handleSendMessage = async () => {
+  if (message.trim() === '') return;
+
+  const newUserMessage = { id: chatHistory.length + 1, text: message, isUser: true };
+  setChatHistory(prev => [...prev, newUserMessage]);
+  setMessage('');
+
+  try {
+    const res = await fetch('http://localhost:5000/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await res.json();
+    const newBotMessage = { id: chatHistory.length + 2, text: data.response, isUser: false };
+    setChatHistory(prev => [...prev, newBotMessage]);
+  } catch (err) {
+    const errorMsg = { id: chatHistory.length + 2, text: "Error connecting to AI backend.", isUser: false };
+    setChatHistory(prev => [...prev, errorMsg]);
+  }
+};
+
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
