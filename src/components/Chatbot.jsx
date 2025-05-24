@@ -20,6 +20,17 @@ import {
   Logout,
   ArrowBack
 } from '@mui/icons-material';
+import { keyframes } from '@emotion/react';
+
+// Add this bounce animation at the top of your file
+const bounce = keyframes`
+  0%, 100% { 
+    transform: translateY(0);
+  }
+  50% { 
+    transform: translateY(-5px);
+  }
+`;
 
 // Styled components
 const AnimatedContainer = styled(motion.div)(({ theme }) => ({
@@ -100,6 +111,24 @@ const MessageContent = styled(Box)(({ theme, isUser }) => ({
   backgroundColor: isUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
   color: 'white',
   position: 'relative',
+  '& .typing-dots': {
+    display: 'inline-flex',
+    gap: 2,
+  },
+  '& .typing-dots span': {
+    display: 'block',
+    width: 4,
+    height: 4,
+    borderRadius: '50%',
+    background: 'currentColor',
+    animation: `${bounce} 0.8s infinite ease-in-out`,
+    '&:nth-of-type(2)': {
+      animationDelay: '0.2s',
+    },
+    '&:nth-of-type(3)': {
+      animationDelay: '0.4s',
+    },
+  },
 }));
 
 const HeaderContainer = styled(Box)(({ theme }) => ({
@@ -117,6 +146,15 @@ export default function ChatbotUI() {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const messageAreaRef = useRef(null);
   const [message, setMessage] = useState('');
+  const [userInitial, setUserInitial] = useState('U');
+
+  useEffect(() => {
+    const username = localStorage.getItem('username');
+    if (username && username.length > 0) {
+      setUserInitial(username.charAt(0).toUpperCase());
+    }
+  }, []);
+
   const [chatHistory, setChatHistory] = useState([
     { id: 1, text: "Hello! I'm MADSKI's AI assistant. How can I help you today?", isUser: false },
   ]);
@@ -128,27 +166,34 @@ export default function ChatbotUI() {
   }, [chatHistory]);
 
   const handleSendMessage = async () => {
-  if (message.trim() === '') return;
+    if (message.trim() === '') return;
 
-  const newUserMessage = { id: chatHistory.length + 1, text: message, isUser: true };
-  setChatHistory(prev => [...prev, newUserMessage]);
-  setMessage('');
+    const userMessage = { id: chatHistory.length + 1, text: message, isUser: true };
+    const typingMessage = { id: chatHistory.length + 2, text: 'Typing...', isUser: false, isTyping: true };
 
-  try {
-    const res = await fetch('http://localhost:5000/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message })
-    });
+    setChatHistory(prev => [...prev, userMessage, typingMessage]);
+    setMessage('');
 
-    const data = await res.json();
-    const newBotMessage = { id: chatHistory.length + 2, text: data.response, isUser: false };
-    setChatHistory(prev => [...prev, newBotMessage]);
-  } catch (err) {
-    const errorMsg = { id: chatHistory.length + 2, text: "Error connecting to AI backend.", isUser: false };
-    setChatHistory(prev => [...prev, errorMsg]);
-  }
-};
+    try {
+      const res = await fetch('http://localhost:5000/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+
+      setChatHistory(prev => [
+        ...prev.slice(0, -1), // Remove typing message
+        { id: prev.length + 1, text: data.response, isUser: false }
+      ]);
+    } catch (err) {
+      setChatHistory(prev => [
+        ...prev.slice(0, -1),
+        { id: prev.length + 1, text: "Error connecting to AI backend.", isUser: false }
+      ]);
+    }
+  };
 
 
   const handleKeyPress = (e) => {
@@ -181,7 +226,7 @@ export default function ChatbotUI() {
       <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
         <HeaderContainer>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton 
+            <IconButton
               onClick={() => navigate(-1)}
               sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}
             >
@@ -189,7 +234,7 @@ export default function ChatbotUI() {
             </IconButton>
 
             <Logo
-            onClick={()=>{navigate("/")}}
+              onClick={() => { navigate("/") }}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
@@ -227,17 +272,28 @@ export default function ChatbotUI() {
                   </Avatar>
                 )}
                 <MessageContent isUser={msg.isUser}>
-                  <Typography variant="body1">{msg.text}</Typography>
+                  {msg.isTyping ? (
+                    <Typography variant="body1">
+                      <span className="typing-dots">
+                        <span />
+                        <span />
+                        <span />
+                      </span>
+                    </Typography>
+                  ) : (
+                    <Typography variant="body1">{msg.text}</Typography>
+                  )}
                 </MessageContent>
                 {msg.isUser && (
                   <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                    U
+                    {localStorage.getItem('username')?.charAt(0).toUpperCase() || 'U'}
                   </Avatar>
                 )}
               </MessageBubble>
             ))}
           </MessageArea>
-          
+
+
           <InputArea>
             <TextField
               fullWidth
@@ -266,11 +322,11 @@ export default function ChatbotUI() {
                 }
               }}
             />
-            <IconButton 
-              color="primary" 
+            <IconButton
+              color="primary"
               onClick={handleSendMessage}
-              sx={{ 
-                backgroundColor: theme.palette.primary.main, 
+              sx={{
+                backgroundColor: theme.palette.primary.main,
                 color: 'white',
                 '&:hover': {
                   backgroundColor: theme.palette.primary.dark,
@@ -283,5 +339,6 @@ export default function ChatbotUI() {
         </ChatContainer>
       </Container>
     </AnimatedContainer>
+
   );
 }
