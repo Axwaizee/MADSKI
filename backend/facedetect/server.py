@@ -25,11 +25,11 @@ app.prepare(ctx_id=0, det_size=(640, 640))  # Prepare model with 640x640 resolut
 # Load trained classifier and label encoder
 classifier = joblib.load("face_classifier.pkl")
 lb_enc = joblib.load("lb_enc.pkl")
-THRESHOLD = 0.7  # Minimum confidence threshold for recognition
+THRESHOLD = 0.85  # Minimum confidence threshold for recognition
 
 # Initialize Flask app with CORS
 api = Flask(__name__)
-CORS(api, resources={r"/*": {"origins": "http://localhost:5173"}})  # Allow Vite frontend
+CORS(api, resources={r"/*": {"origins": "*"}})  # Allow Vite frontend
 
 
 @api.route('/recognize', methods=['POST'])
