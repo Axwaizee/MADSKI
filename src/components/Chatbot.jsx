@@ -20,6 +20,7 @@ import {
   Logout,
   ArrowBack
 } from '@mui/icons-material';
+import ReactMarkdown from 'react-markdown';
 import { keyframes } from '@emotion/react';
 
 // Add this bounce animation at the top of your file
@@ -348,7 +349,11 @@ export default function ChatbotUI() {
                       </Typography>
                     </Box>
                   ) : (
-                    <Typography variant="body1">{msg.text}</Typography>
+                    <ReactMarkdown components={{
+                      p: ({ node, ...props }) => <Typography variant="body1" {...props} />
+                    }}>
+                      {msg.text}
+                    </ReactMarkdown>
                   )}
                 </MessageContent>
                 {msg.isUser && (
