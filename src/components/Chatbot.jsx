@@ -31,6 +31,10 @@ const bounce = keyframes`
     transform: translateY(-5px);
   }
 `;
+const blink = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+`;
 
 // Styled components
 const AnimatedContainer = styled(motion.div)(({ theme }) => ({
@@ -168,29 +172,82 @@ export default function ChatbotUI() {
   const handleSendMessage = async () => {
     if (message.trim() === '') return;
 
-    const userMessage = { id: chatHistory.length + 1, text: message, isUser: true };
-    const typingMessage = { id: chatHistory.length + 2, text: 'Typing...', isUser: false, isTyping: true };
-
-    setChatHistory(prev => [...prev, userMessage, typingMessage]);
+    const userMessage = { id: Date.now(), text: message, isUser: true };
+    setChatHistory(prev => [...prev, userMessage]);
     setMessage('');
 
     try {
-      const res = await fetch('http://localhost:5000/chat', {
+      setChatHistory(prev => [...prev, {
+        id: Date.now() + 1,
+        text: '',
+        isUser: false,
+        isStreaming: true
+      }]);
+
+      const response = await fetch('http://localhost:5000/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
       });
 
-      const data = await res.json();
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
 
-      setChatHistory(prev => [
-        ...prev.slice(0, -1), // Remove typing message
-        { id: prev.length + 1, text: data.response, isUser: false }
-      ]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        // Process complete SSE events
+        while (buffer.includes('\n\n')) {
+          const eventEnd = buffer.indexOf('\n\n');
+          const eventChunk = buffer.slice(0, eventEnd);
+          buffer = buffer.slice(eventEnd + 2);
+
+          // Handle JSON parsing
+          try {
+            const eventData = eventChunk.replace('data: ', '');
+            const { content, error } = JSON.parse(eventData);
+
+            if (error) {
+              throw new Error(error);
+            }
+
+            setChatHistory(prev => {
+              const lastMessage = prev[prev.length - 1];
+              if (lastMessage.isStreaming) {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...lastMessage, text: lastMessage.text + (content || '') }
+                ];
+              }
+              return prev;
+            });
+          } catch (err) {
+            console.error('Error parsing event:', err);
+          }
+        }
+      }
+
+      // Finalize streaming state
+      setChatHistory(prev => {
+        const lastMessage = prev[prev.length - 1];
+        return [
+          ...prev.slice(0, -1),
+          { ...lastMessage, isStreaming: false }
+        ];
+      });
+
     } catch (err) {
       setChatHistory(prev => [
         ...prev.slice(0, -1),
-        { id: prev.length + 1, text: "Error connecting to AI backend.", isUser: false }
+        {
+          id: Date.now(),
+          text: `Error: ${err.message}`,
+          isUser: false
+        }
       ]);
     }
   };
@@ -272,21 +329,31 @@ export default function ChatbotUI() {
                   </Avatar>
                 )}
                 <MessageContent isUser={msg.isUser}>
-                  {msg.isTyping ? (
-                    <Typography variant="body1">
-                      <span className="typing-dots">
-                        <span />
-                        <span />
-                        <span />
-                      </span>
-                    </Typography>
+                  {msg.isStreaming ? (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Typography variant="body1" sx={{ position: 'relative' }}>
+                        {msg.text}
+                        <Box
+                          component="span"
+                          sx={{
+                            animation: `${blink} 1s infinite`,
+                            opacity: 0.7,
+                            position: 'absolute',
+                            right: -10,
+                            bottom: 2
+                          }}
+                        >
+                          ▋
+                        </Box>
+                      </Typography>
+                    </Box>
                   ) : (
                     <Typography variant="body1">{msg.text}</Typography>
                   )}
                 </MessageContent>
                 {msg.isUser && (
                   <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                    {localStorage.getItem('username')?.charAt(0).toUpperCase() || 'U'}
+                    {userInitial}
                   </Avatar>
                 )}
               </MessageBubble>
