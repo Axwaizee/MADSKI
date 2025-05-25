@@ -2,42 +2,26 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  styled,
-  Typography,
-  Box,
-  Container,
-  TextField,
-  IconButton,
-  Paper,
-  Avatar,
-  Button,
-  useMediaQuery,
-  useTheme
+  styled, Typography, Box, Container, TextField, IconButton, Paper,
+  Avatar, Button, useMediaQuery, useTheme
 } from '@mui/material';
 import {
-  FaceRetouchingNatural,
-  Send,
-  Logout,
-  ArrowBack
+  FaceRetouchingNatural, Send, Logout, ArrowBack
 } from '@mui/icons-material';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { keyframes } from '@emotion/react';
 
-// Add this bounce animation at the top of your file
 const bounce = keyframes`
-  0%, 100% { 
-    transform: translateY(0);
-  }
-  50% { 
-    transform: translateY(-5px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 `;
+
 const blink = keyframes`
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 `;
 
-// Styled components
 const AnimatedContainer = styled(motion.div)(({ theme }) => ({
   height: '100dvh',
   background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, #0b8280 100%)`,
@@ -53,9 +37,7 @@ const FeatureCircle = styled(motion.div)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.1)',
   filter: 'blur(2px)',
   zIndex: 0,
-  [theme.breakpoints.down('md')]: {
-    display: 'none'
-  },
+  [theme.breakpoints.down('md')]: { display: 'none' },
 }));
 
 const Logo = styled(motion.div)(({ theme }) => ({
@@ -63,11 +45,11 @@ const Logo = styled(motion.div)(({ theme }) => ({
   alignItems: 'center',
   gap: theme.spacing(1),
   '& .logo-text': {
-    background: `linear-gradient(45deg, ${theme.palette.secondary.main} 0%,rgb(13, 27, 177) 100%)`,
+    background: `linear-gradient(45deg, ${theme.palette.secondary.main} 0%, rgb(13, 27, 177) 100%)`,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     fontWeight: 'bold',
-    fontSize: '1.5rem'
+    fontSize: '1.5rem',
   }
 }));
 
@@ -82,8 +64,7 @@ const ChatContainer = styled(Paper)(({ theme }) => ({
   overflow: 'hidden',
   position: 'relative',
   zIndex: 1,
-  marginTop: theme.spacing(2),
-  marginBottom: theme.spacing(2),
+  margin: theme.spacing(2, 0),
 }));
 
 const MessageArea = styled(Box)(({ theme }) => ({
@@ -115,24 +96,12 @@ const MessageContent = styled(Box)(({ theme, isUser }) => ({
   borderRadius: '16px',
   backgroundColor: isUser ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)',
   color: 'white',
-  position: 'relative',
-  '& .typing-dots': {
-    display: 'inline-flex',
-    gap: 2,
+  wordWrap: 'break-word',
+  '& ol, & ul': {
+    paddingLeft: theme.spacing(3),
   },
-  '& .typing-dots span': {
-    display: 'block',
-    width: 4,
-    height: 4,
-    borderRadius: '50%',
-    background: 'currentColor',
-    animation: `${bounce} 0.8s infinite ease-in-out`,
-    '&:nth-of-type(2)': {
-      animationDelay: '0.2s',
-    },
-    '&:nth-of-type(3)': {
-      animationDelay: '0.4s',
-    },
+  '& li': {
+    marginBottom: theme.spacing(0.5),
   },
 }));
 
@@ -149,26 +118,35 @@ export default function ChatbotUI() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const inputRef = useRef(null);
   const messageAreaRef = useRef(null);
+
   const [message, setMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    { id: 1, text: "Hello! I'm MADSKI's AI assistant. How can I help you today?", isUser: false },
+  ]);
   const [userInitial, setUserInitial] = useState('U');
 
   useEffect(() => {
     const username = localStorage.getItem('username');
-    if (username && username.length > 0) {
-      setUserInitial(username.charAt(0).toUpperCase());
-    }
+    if (username) setUserInitial(username.charAt(0).toUpperCase());
   }, []);
-
-  const [chatHistory, setChatHistory] = useState([
-    { id: 1, text: "Hello! I'm MADSKI's AI assistant. How can I help you today?", isUser: false },
-  ]);
 
   useEffect(() => {
     if (messageAreaRef.current) {
       messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
     }
   }, [chatHistory]);
+
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (document.activeElement !== inputRef.current && /^[a-zA-Z0-9,.? ]$/.test(e.key)) {
+        inputRef.current.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, []);
 
   const handleSendMessage = async () => {
     if (message.trim() === '') return;
@@ -179,13 +157,10 @@ export default function ChatbotUI() {
 
     try {
       setChatHistory(prev => [...prev, {
-        id: Date.now() + 1,
-        text: '',
-        isUser: false,
-        isStreaming: true
+        id: Date.now() + 1, text: '', isUser: false, isStreaming: true
       }]);
 
-      const response = await fetch('http://localhost:5000/chat', {
+      const response = await fetch(`${import.meta.env.VITE_CHATBOT}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message })
@@ -198,124 +173,68 @@ export default function ChatbotUI() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-
         buffer += decoder.decode(value, { stream: true });
 
-        // Process complete SSE events
         while (buffer.includes('\n\n')) {
           const eventEnd = buffer.indexOf('\n\n');
-          const eventChunk = buffer.slice(0, eventEnd);
+          const chunk = buffer.slice(0, eventEnd);
           buffer = buffer.slice(eventEnd + 2);
-
-          // Handle JSON parsing
           try {
-            const eventData = eventChunk.replace('data: ', '');
+            const eventData = chunk.replace('data: ', '');
             const { content, error } = JSON.parse(eventData);
-
-            if (error) {
-              throw new Error(error);
-            }
-
+            if (error) throw new Error(error);
             setChatHistory(prev => {
-              const lastMessage = prev[prev.length - 1];
-              if (lastMessage.isStreaming) {
-                return [
-                  ...prev.slice(0, -1),
-                  { ...lastMessage, text: lastMessage.text + (content || '') }
-                ];
+              const last = prev[prev.length - 1];
+              if (last.isStreaming) {
+                return [...prev.slice(0, -1), { ...last, text: last.text + (content || '') }];
               }
               return prev;
             });
           } catch (err) {
-            console.error('Error parsing event:', err);
+            console.error('SSE parse error:', err);
           }
         }
       }
 
-      // Finalize streaming state
       setChatHistory(prev => {
-        const lastMessage = prev[prev.length - 1];
-        return [
-          ...prev.slice(0, -1),
-          { ...lastMessage, isStreaming: false }
-        ];
+        const last = prev[prev.length - 1];
+        return [...prev.slice(0, -1), { ...last, isStreaming: false }];
       });
-
     } catch (err) {
-      setChatHistory(prev => [
-        ...prev.slice(0, -1),
-        {
-          id: Date.now(),
-          text: `Error: ${err.message}`,
-          isUser: false
-        }
-      ]);
+      setChatHistory(prev => [...prev.slice(0, -1), {
+        id: Date.now(), text: `Error: ${err.message}`, isUser: false
+      }]);
     }
   };
-
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
+    if (e.key === 'Enter') handleSendMessage();
   };
 
-  const handleLogout = () => {
-    navigate('/login');
-  };
+  const handleLogout = () => navigate('/login');
 
   return (
-    <AnimatedContainer
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8 }}
-    >
-      <FeatureCircle
-        animate={{ scale: [1, 1.2, 1], rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity }}
-        style={{ width: 600, height: 600, top: -200, left: -200 }}
-      />
-      <FeatureCircle
-        animate={{ y: [0, 40, 0] }}
-        transition={{ duration: 12, repeat: Infinity }}
-        style={{ width: 400, height: 400, bottom: -150, right: -150 }}
-      />
+    <AnimatedContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }}>
+      <FeatureCircle animate={{ scale: [1, 1.2, 1], rotate: 360 }} transition={{ duration: 20, repeat: Infinity }}
+        style={{ width: 600, height: 600, top: -200, left: -200 }} />
+      <FeatureCircle animate={{ y: [0, 40, 0] }} transition={{ duration: 12, repeat: Infinity }}
+        style={{ width: 400, height: 400, bottom: -150, right: -150 }} />
 
       <Container maxWidth="xl" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
         <HeaderContainer>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <IconButton
-              onClick={() => navigate(-1)}
-              sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.1)' } }}
-            >
+            <IconButton onClick={() => navigate(-1)} sx={{ color: 'white' }}>
               <ArrowBack />
             </IconButton>
-
-            <Logo
-              onClick={() => { navigate("/") }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
+            <Logo onClick={() => navigate("/")} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
               <FaceRetouchingNatural sx={{ fontSize: isMobile ? 40 : 60 }} />
-              <Typography variant="body1" className="logo-text">
-                MADSKI
-              </Typography>
+              <Typography variant="body1" className="logo-text">MADSKI</Typography>
             </Logo>
           </Box>
-
-          <Button
-            variant="contained"
-            startIcon={<Logout />}
-            onClick={handleLogout}
-            sx={{
-              borderRadius: '12px',
-              backgroundColor: 'rgb(0, 0, 0)',
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.3)',
-              }
-            }}
-          >
+          <Button variant="contained" startIcon={<Logout />} onClick={handleLogout} sx={{
+            borderRadius: '12px', backgroundColor: 'black',
+            '&:hover': { backgroundColor: 'rgba(0,0,0,0.3)' }
+          }}>
             {isMobile ? '' : 'Logout'}
           </Button>
         </HeaderContainer>
@@ -324,51 +243,36 @@ export default function ChatbotUI() {
           <MessageArea ref={messageAreaRef}>
             {chatHistory.map((msg) => (
               <MessageBubble key={msg.id} isUser={msg.isUser}>
-                {!msg.isUser && (
-                  <Avatar sx={{ bgcolor: theme.palette.primary.main }}>
-                    <FaceRetouchingNatural />
-                  </Avatar>
-                )}
+                {!msg.isUser && <Avatar sx={{ bgcolor: theme.palette.primary.main }}><FaceRetouchingNatural /></Avatar>}
                 <MessageContent isUser={msg.isUser}>
                   {msg.isStreaming ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Typography variant="body1" sx={{ position: 'relative' }}>
-                        {msg.text}
-                        <Box
-                          component="span"
-                          sx={{
-                            animation: `${blink} 1s infinite`,
-                            opacity: 0.7,
-                            position: 'absolute',
-                            right: -10,
-                            bottom: 2
-                          }}
-                        >
-                          ▋
-                        </Box>
-                      </Typography>
-                    </Box>
+                    <Typography variant="body1" sx={{ position: 'relative' }}>
+                      {msg.text}
+                      <Box component="span" sx={{
+                        animation: `${blink} 1s infinite`,
+                        position: 'absolute', right: -10, bottom: 2
+                      }}>▋</Box>
+                    </Typography>
                   ) : (
-                    <ReactMarkdown components={{
-                      p: ({ node, ...props }) => <Typography variant="body1" {...props} />
-                    }}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ node, ...props }) => <Typography variant="body1" {...props} />,
+                        li: ({ node, ...props }) => <li style={{ marginLeft: '1em' }} {...props} />
+                      }}>
                       {msg.text}
                     </ReactMarkdown>
                   )}
                 </MessageContent>
-                {msg.isUser && (
-                  <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                    {userInitial}
-                  </Avatar>
-                )}
+                {msg.isUser && <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>{userInitial}</Avatar>}
               </MessageBubble>
             ))}
           </MessageArea>
 
-
           <InputArea>
             <TextField
               fullWidth
+              inputRef={inputRef}
               variant="outlined"
               placeholder="Type your message..."
               value={message}
@@ -400,9 +304,7 @@ export default function ChatbotUI() {
               sx={{
                 backgroundColor: theme.palette.primary.main,
                 color: 'white',
-                '&:hover': {
-                  backgroundColor: theme.palette.primary.dark,
-                }
+                '&:hover': { backgroundColor: theme.palette.primary.dark },
               }}
             >
               <Send />
@@ -411,6 +313,5 @@ export default function ChatbotUI() {
         </ChatContainer>
       </Container>
     </AnimatedContainer>
-
   );
 }
